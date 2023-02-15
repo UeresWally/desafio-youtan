@@ -1,0 +1,153 @@
+{% extends 'client/__base.html' %}
+
+{% block content %}
+{% csrf_token %}
+    <div class="container-md">
+        <div class="row">
+            <div class="col">
+                <p>Dados cadastrais</p>
+                <p>Informações cadastrais da empresa cliente</p>
+            </div>
+            <div class="col">
+                <form id="formUpdate" class="row shadow p-3 mb-5 rounded">
+                  <div class="col">
+                      <label for="formGroupExampleInput" class="form-label">Empresa</label>
+                      <input type="text" class="form-control" id="name" value="{{ client.name }}">
+                  </div>
+                  <div class="col">
+                      <label for="formGroupExampleInput" id="status"class="form-label">Ativo</label>
+                      <select id="statusOpt" class="form-select" aria-label="Default select example">
+                        {% if client.active is True %}  
+                          <option value="True" selected>Ativo</option>
+                          <option value="False">Inativo</option>
+                        {% else %}
+                          <option value="False" selected>Inativo</option>
+                          <option value="True">Ativo</option>
+                        {% endif %}
+                      </select>
+                  </div>
+                </form>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 20px;">
+            <div class="col">
+                <p>CNPJs</p>
+                <p>Cadastro de CNPJs relacionados com a empresa cliente. Arquivos serão associados a um CNPJ durante o upload</p>
+            </div>
+            <div class="col shadow p-3 mb-5 rounded">
+                <div>
+                    <div class="d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                          <i class="bi bi-pencil-square">
+                        </i>Novo</button>
+                    </div>
+                    <table class="table">
+                      {% if client.branch_set.all %}
+                        <tbody>
+                          {% for branch in client.branch_set.all %}
+                            <tr id="{{ branch.id }}">
+                              <td>{{ branch.cnpj }} {{ branch.id }}</td>
+                              <td>{{ branch.name}}</td>
+                              <td>
+                                {% if branch.active is True %}
+                                        <span class="badge rounded-pill text-bg-success">ativo</span>
+                                    {% else %}
+                                        <span class="badge rounded-pill text-bg-secondary">inativo</span>
+                                    {% endif %}
+                              </td>
+                              <td class="d-md-flex justify-content-md-end">
+                                  <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                      <i class="material-symbols-outlined" style="font-size: 16px;">
+                                          edit_square
+                                      </i>
+                                      <a href="#">editar</a>
+                                  </button>
+                              </td>
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      {% endif %}  
+                    </table>
+                    <!-- Modal aqui -->
+                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h1 class="modal-title fs-5" id="exampleModalLabel">Editando CNPJ</h1>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form id="newBranch"class="modal-body">
+                              <div class="row">
+                                <label for="formGroupExampleInput" class="form-label">Ativo</label>
+                                <select id="newBranchSelect" class="form-select" aria-label="Default select example">
+                                    <option value="True">Sim</option>
+                                    <option value="False">Não</option>
+                                </select>
+                              </div>
+                              <div class="row">
+                                <label for="formGroupExampleInput" class="form-label">CNPJ</label>
+                                <input id="branchCNPJ" type="text" class="form-control" id="formGroupExampleInput" placeholder="">
+                              </div>
+                              <div class="row">
+                                <label for="formGroupExampleInput" class="form-label">Nome</label>
+                                <input id="newBranchName" type="text" class="form-control" id="formGroupExampleInput" placeholder="">
+                              </div>
+                            </form>
+                            <div class="modal-footer">
+                              <button form="newBranch"type="input" class="btn btn-primary">Salvar</button>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row container-fluid">
+              <div class="col"></div>
+              <div class="col">
+                <button id="deleteUser" form="formUpdate" type="button" class="btn btn-outline-danger">Excluir</button>
+                <button id="form" type="submit" form="formUpdate" class="btn btn-primary float-end">Salvar</button>
+              </div>
+            </div>
+        </div>
+    </div>
+    <script>
+
+        let form = document.getElementById('formUpdate');
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault()
+            
+            let data = new FormData();
+
+            let select = document.getElementById("statusOpt");
+            data.append("active", select.options[select.selectedIndex].value)
+            data.append("name", document.getElementById('name').value)
+            data.append("csrfmiddlewaretoken", csrftoken)
+            
+            axios.post('update/', data)
+            .then(res => alert("Informações atualizadas"))
+            .catch(errors => console.log(errors))
+
+        })
+
+        let newBranch = document.getElementById('newBranch');
+
+        newBranch.addEventListener('submit', function(event) {
+            event.preventDefault()
+            
+            let data = new FormData();
+
+            let select = document.getElementById("newBranchSelect");
+            data.append("cnpj", document.getElementById('branchCNPJ').value)
+            data.append("active", select.options[select.selectedIndex].value)
+            data.append("name", document.getElementById('newBranchName').value)
+            data.append("csrfmiddlewaretoken", getCookie('csrftoken'))
+            
+            axios.post('create/branch', data)
+            .then(res => window.location.reload())
+            .catch(errors => console.log(errors))
+
+        })
+
+    </script>
+{% endblock %}
