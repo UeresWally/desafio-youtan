@@ -21,7 +21,7 @@ def popula():
     for c in client_dict:
         c1 = Client.objects.create(**c)
         c1.save()
-    return 'Deu bom'
+    return client_dict
 
 def popula_branch():
     clien_entry = Client.objects.get(pk=1)
